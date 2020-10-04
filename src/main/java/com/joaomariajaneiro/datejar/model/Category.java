@@ -3,7 +3,6 @@ package com.joaomariajaneiro.datejar.model;
 import com.joaomariajaneiro.datejar.model.enums.Type;
 
 import javax.persistence.*;
-import java.util.Set;
 
 @Entity
 @Table(name = "CATEGORY")
@@ -16,12 +15,12 @@ public class Category {
     @Column(name = "NAME")
     private String name;
 
-    @OneToMany(mappedBy = "cart")
-    private Set<SubCategory> subCategories;
+    @Column(name = "TYPE")
+    private Type type;
 
-
-    public Category(String name) {
+    public Category(String name, Type type) {
         this.name = name;
+        this.type = type;
     }
 
     public Category() {
@@ -40,16 +39,11 @@ public class Category {
         return id;
     }
 
-    public Set<SubCategory> getSubCategories() {
-        return subCategories;
+    public Type getType() {
+        return type;
     }
 
-    public Category setSubCategories(Set<SubCategory> subCategories) {
-        this.subCategories = subCategories;
-        return this;
-    }
-
-    public void addSubCategory(SubCategory subCategory) {
-        subCategories.add(subCategory);
+    public void setType(Type type) {
+        this.type = type;
     }
 }
