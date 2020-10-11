@@ -14,14 +14,17 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @Column(name = "USERNAME")
+    @Column(name = "USERNAME", unique = true)
     private String username;
 
-    @Column(name = "EMAIL")
+    @Column(name = "EMAIL", unique = true)
     private String email;
 
     @Column(name = "PASSWORD")
     private String password;
+
+    @Column(name = "PICTURE", length = 100000)
+    private String picture;
 
     @OneToMany
     @JoinColumn(name = "CATEGORY_ID")
@@ -30,11 +33,27 @@ public class User {
     public User() {
     }
 
-    public User(String username, String email, String password, List<Category> categories) {
+    public User(String username, String email, String password, List<Category> categories, String picture) {
         this.username = username;
         this.email = email;
         this.password = password;
+        this.picture = picture;
         this.categories = categories;
+    }
+
+    public User(String username, String email, String password, String picture) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.picture = picture;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
     }
 
     public String getUsername() {
@@ -89,38 +108,6 @@ public class User {
     @Override
     public String toString() {
         return "User{" + "id=" + id + ", username='" + username + '\'' + ", email='" + email + '\'' + ", password='" + password + '\'' + ", categories=" + categories + '}';
-    }
-
-    private int active;
-
-    private String roles = "";
-
-    private String permissions = "";
-
-    public int getActive() {
-        return active;
-    }
-
-    public String getRoles() {
-        return roles;
-    }
-
-    public String getPermissions() {
-        return permissions;
-    }
-
-    public List<String> getRoleList() {
-        if (this.roles.length() > 0) {
-            return Arrays.asList(this.roles.split(","));
-        }
-        return new ArrayList<>();
-    }
-
-    public List<String> getPermissionList() {
-        if (this.permissions.length() > 0) {
-            return Arrays.asList(this.permissions.split(","));
-        }
-        return new ArrayList<>();
     }
 
 }

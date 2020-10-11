@@ -4,6 +4,10 @@ package com.joaomariajaneiro.datejar.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonObject;
+import com.joaomariajaneiro.datejar.model.Category;
+import com.joaomariajaneiro.datejar.model.User;
+import com.joaomariajaneiro.datejar.repository.UserRepository;
 import com.joaomariajaneiro.datejar.security.JwtUtil;
 import com.joaomariajaneiro.datejar.security.MyUserDetailsService;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +33,7 @@ public class UserController {
     private JwtUtil jwtTokenUtil;
 
     @Autowired
-    private MyUserDetailsService userDetailsService;
+    private UserRepository userRepository;
 
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -46,10 +50,45 @@ public class UserController {
             return "Username and password didn't match";
         }
 
-        final UserDetails userDetails = userDetailsService
-                .loadUserByUsername(jsonNode.get("username").asText());
+        final User user = userRepository.findByUsername(jsonNode.get("username").asText());
 
-        return jwtTokenUtil.generateToken(userDetails);
+        JsonObject output = new JsonObject();
+        output.addProperty("token", jwtTokenUtil.generateToken(user.getUsername()));
+        output.addProperty("picture", user.getPicture());
+        return output.toString();
+    }
+
+    @PostMapping(value = "/create")
+    public String signup(@RequestBody String payload) throws JsonProcessingException {
+        JsonNode jsonNode = objectMapper.readTree(payload);
+
+        User user;
+        try {
+            user = new User(
+                    jsonNode.get("username").asText(),
+                    jsonNode.get("email").asText(),
+                    jsonNode.get("password").asText(),
+                    jsonNode.get("picture").asText()
+            );
+            userRepository.save(user);
+        } catch (Exception e) {
+            return "An error occurred while creating your account, please try again";
+        }
+
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(jsonNode.get("username").asText(),
+                            jsonNode.get("password").asText())
+            );
+        } catch (BadCredentialsException e) {
+            return "Your account was created successfully but an error occurred while" +
+                    " trying to sign you in. Please sign up manually";
+        }
+
+        JsonObject output = new JsonObject();
+        output.addProperty("token", jwtTokenUtil.generateToken(user.getUsername()));
+        output.addProperty("picture", user.getPicture());
+        return output.toString();
     }
 }
 

@@ -15,7 +15,7 @@ import java.util.function.Function;
 public class JwtUtil {
 
     private String SECRET_KEY = "secret";
-    public static final String JWT_PREFIX= "Bearer ";
+    public static final String JWT_PREFIX = "Bearer ";
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -38,9 +38,9 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
+        return createToken(claims, username);
     }
 
     private String createToken(Map<String, Object> claims, String subject) {

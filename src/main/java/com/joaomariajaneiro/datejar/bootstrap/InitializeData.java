@@ -7,6 +7,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+
 @Component
 @Slf4j
 public class InitializeData implements ApplicationListener<ContextRefreshedEvent> {
@@ -16,6 +18,10 @@ public class InitializeData implements ApplicationListener<ContextRefreshedEvent
 
     @Override
     public void onApplicationEvent(@NonNull final ContextRefreshedEvent event) {
-        importData.importData();
+        try {
+            importData.importData();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
