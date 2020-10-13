@@ -18,10 +18,10 @@ public class InitializeData implements ApplicationListener<ContextRefreshedEvent
 
     @Override
     public void onApplicationEvent(@NonNull final ContextRefreshedEvent event) {
-        try {
-            importData.importData();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            importData.importData();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 }

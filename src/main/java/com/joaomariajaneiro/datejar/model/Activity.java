@@ -14,28 +14,11 @@ public class Activity {
     @Column(name = "NAME")
     private String name;
 
-    @OneToMany
-    @JoinColumn(name = "ACTIVITY_ID")
-    private List<Activity> activities;
-
     public Activity() {
     }
 
     public Activity(String name) {
         this.name = name;
-    }
-
-    public Activity(String name, List<Activity> activities) {
-        this.name = name;
-        this.activities = activities;
-    }
-
-    public List<Activity> getActivities() {
-        return activities;
-    }
-
-    public void setActivities(List<Activity> activities) {
-        this.activities = activities;
     }
 
     public String getName() {
