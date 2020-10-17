@@ -4,20 +4,14 @@ import com.joaomariajaneiro.datejar.model.User;
 import com.joaomariajaneiro.datejar.repository.row_mappers.UsersRowMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
-import java.util.HashMap;
-import java.util.Map;
 
 @Repository
 public class UserRepository {
 
     private final JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    DataSource dataSource;
 
     @Autowired
     public UserRepository(JdbcTemplate jdbcTemplate) {
@@ -35,7 +29,8 @@ public class UserRepository {
     public int save(User user) {
         return jdbcTemplate.update("INSERT INTO Users (id, username, password, email, picture)" +
                         " VALUES (" +
-                        "(SELECT setval(pg_get_serial_sequence('users', 'id'), coalesce(max(id)+1, 1), false) FROM users)," +
+                        "(SELECT setval(pg_get_serial_sequence('users', 'id'), coalesce(max(id)" +
+                        "+1, 1), false) FROM users)," +
                         "?, " +
                         "?, " +
                         "?, " +

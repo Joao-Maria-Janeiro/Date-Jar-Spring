@@ -8,6 +8,11 @@ public class Activity {
     public Activity() {
     }
 
+    public Activity(long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     public Activity(String name) {
         this.name = name;
     }
