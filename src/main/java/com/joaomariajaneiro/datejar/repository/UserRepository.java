@@ -1,25 +1,50 @@
 package com.joaomariajaneiro.datejar.repository;
 
-import com.joaomariajaneiro.datejar.model.Category;
 import com.joaomariajaneiro.datejar.model.User;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
+import com.joaomariajaneiro.datejar.repository.row_mappers.UsersRowMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
 
 @Repository
-public interface UserRepository extends CrudRepository<User, Long> {
+public class UserRepository {
 
-    @Query(value = "SELECT u.categories FROM User u WHERE u.id = ?1")
-    List<Category> getAllUserPendingCategories(Long id);
+    private final JdbcTemplate jdbcTemplate;
 
-    @Query(value = "SELECT u.categories FROM User u WHERE u.username = ?1")
-    List<Category> getAllUserPendingCategories(String username);
+    @Autowired
+    DataSource dataSource;
 
-    User getById(Long id);
+    @Autowired
+    public UserRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
-    User findByUsername(String username);
+    public User findByUsername(String username) {
+        User user = jdbcTemplate.queryForObject(
+                "SELECT * FROM Users WHERE username LIKE ?",
+                new Object[]{username},
+                new UsersRowMapper());
+        return user;
+    }
 
-    User findByEmail(String email);
+    public int save(User user) {
+        return jdbcTemplate.update("INSERT INTO Users (id, username, password, email, picture)" +
+                        " VALUES (" +
+                        "(SELECT setval(pg_get_serial_sequence('users', 'id'), coalesce(max(id)+1, 1), false) FROM users)," +
+                        "?, " +
+                        "?, " +
+                        "?, " +
+                        "?)",
+                user.getUsername(),
+                user.getPassword(),
+                user.getEmail(),
+                user.getPicture()
+        );
+    }
+
 }

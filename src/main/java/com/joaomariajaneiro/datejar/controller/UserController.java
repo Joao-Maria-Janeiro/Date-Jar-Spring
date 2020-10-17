@@ -5,17 +5,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
-import com.joaomariajaneiro.datejar.model.Category;
+import com.joaomariajaneiro.datejar.exceptions.AuthenticationException;
 import com.joaomariajaneiro.datejar.model.User;
 import com.joaomariajaneiro.datejar.repository.UserRepository;
 import com.joaomariajaneiro.datejar.security.JwtUtil;
-import com.joaomariajaneiro.datejar.security.MyUserDetailsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,7 +45,7 @@ public class UserController {
                             jsonNode.get("password").asText())
             );
         } catch (BadCredentialsException e) {
-            return "Username and password didn't match";
+            throw new AuthenticationException();
         }
 
         final User user = userRepository.findByUsername(jsonNode.get("username").asText());

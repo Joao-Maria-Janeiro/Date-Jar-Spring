@@ -3,10 +3,10 @@ package com.joaomariajaneiro.datejar.exceptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(value = HttpStatus.NON_AUTHORITATIVE_INFORMATION)
+@ResponseStatus(value = HttpStatus.UNAUTHORIZED)
 public class AuthenticationException extends RuntimeException {
 
-    private static final String FORBIDDEN = "Forbidden";
+    private static final String FORBIDDEN = "Username and Password didn't match";
 
     public AuthenticationException() {
         super(FORBIDDEN);

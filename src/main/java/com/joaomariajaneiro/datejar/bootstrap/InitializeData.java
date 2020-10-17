@@ -13,8 +13,8 @@ import java.io.IOException;
 @Slf4j
 public class InitializeData implements ApplicationListener<ContextRefreshedEvent> {
 
-    @Autowired
-    private ImportData importData;
+//    @Autowired
+//    private ImportData importData;
 
     @Override
     public void onApplicationEvent(@NonNull final ContextRefreshedEvent event) {

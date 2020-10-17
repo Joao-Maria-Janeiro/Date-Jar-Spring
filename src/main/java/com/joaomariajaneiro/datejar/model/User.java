@@ -1,36 +1,40 @@
 package com.joaomariajaneiro.datejar.model;
 
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-@Entity
-@Table(name = "USER")
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @Column(name = "USERNAME", unique = true)
     private String username;
 
-    @Column(name = "EMAIL", unique = true)
     private String email;
 
-    @Column(name = "PASSWORD")
     private String password;
 
-    @Column(name = "PICTURE", length = 100000)
     private String picture;
 
-    @OneToMany
-    @JoinColumn(name = "CATEGORY_ID")
     private List<Category> categories;
 
     public User() {
+    }
+
+    public User(long id, String username, String email, String password, String picture) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.picture = picture;
+    }
+
+    public User(long id, String username, String email, String password, String picture, List<Category> categories) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.picture = picture;
+        this.categories = categories;
     }
 
     public User(String username, String email, String password, List<Category> categories, String picture) {

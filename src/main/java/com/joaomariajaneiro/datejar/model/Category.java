@@ -2,26 +2,29 @@ package com.joaomariajaneiro.datejar.model;
 
 import com.joaomariajaneiro.datejar.model.enums.Type;
 
-import javax.persistence.*;
 import java.util.List;
 
-@Entity
-@Table(name = "CATEGORY")
 public class Category {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @Column(name = "NAME")
     private String name;
 
-    @Column(name = "TYPE")
     private Type type;
 
-    @OneToMany
-    @JoinColumn(name = "ACTIVITY_ID")
     private List<Activity> activities;
+
+    public Category(long id, String name, Type type) {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+    }
+
+    public Category(long id, String name, Type type, List<Activity> activities) {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+        this.activities = activities;
+    }
 
     public Category(String name, Type type) {
         this.name = name;
