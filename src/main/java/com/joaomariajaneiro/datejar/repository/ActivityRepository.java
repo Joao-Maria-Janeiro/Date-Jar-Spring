@@ -32,4 +32,37 @@ public class ActivityRepository {
                         ".id=c.user_id WHERE c.name = ? AND u.username = ?))",
                 activity.getName(), categoryName, username);
     }
+
+    public int update(String newActivityName, String oldActivityName, String categoryName,
+                      String username) {
+        return jdbcTemplate.update("UPDATE Activity" +
+                        "    SET name = ? WHERE name = (SELECT a.name FROM Activity a JOIN " +
+                        "Category c ON a.category_id=" +
+                        "        c.id JOIN Users u ON c.user_id=u.id WHERE u.username = ? AND c" +
+                        ".name = ? AND a.name = ?)",
+                newActivityName, username, categoryName, oldActivityName);
+    }
+
+    public int delete(String activityName, String categoryName,
+                      String username) {
+        return jdbcTemplate.update("DELETE FROM Activity" +
+                        "    WHERE name = (SELECT a.name FROM Activity a JOIN Category c ON a" +
+                        ".category_id=" +
+                        "        c.id JOIN Users u ON c.user_id=u.id WHERE u.username = ? AND c" +
+                        ".name = ? AND a.name = ?)",
+                username, categoryName, activityName);
+    }
 }
+
+
+//AND a.name = ?
+
+//    UPDATE Activity
+//    SET name = ? WHERE name = (SELECT a.name FROM Activity a JOIN Category c ON a.category_id=
+//        c.id JOIN Users u ON c.user_id=u.id WHERE u.username = ? AND c.name = ? AND a.name = ?)
+
+
+//    DELETE FROM Activity
+//    WHERE name = (SELECT a.name FROM Activity a JOIN Category c ON a.category_id=
+//        c.id JOIN Users u ON c.user_id=u.id WHERE u.username = ? AND c.name = ? AND a.name = ?)
+
