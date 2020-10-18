@@ -61,7 +61,7 @@ public class UserController {
         JsonNode jsonNode = objectMapper.readTree(payload);
 
         User user;
-        try {
+//        try {
             user = new User(
                     jsonNode.get("username").asText(),
                     jsonNode.get("email").asText(),
@@ -69,9 +69,9 @@ public class UserController {
                     jsonNode.get("picture").asText()
             );
             userRepository.save(user);
-        } catch (Exception e) {
-            return "An error occurred while creating your account, please try again";
-        }
+//        } catch (Exception e) {
+//            return "An error occurred while creating your account, please try again";
+//        }
 
         try {
             authenticationManager.authenticate(
