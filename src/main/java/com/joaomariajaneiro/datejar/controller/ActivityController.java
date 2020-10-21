@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joaomariajaneiro.datejar.exceptions.AuthenticationException;
 import com.joaomariajaneiro.datejar.model.Activity;
+import com.joaomariajaneiro.datejar.model.enums.Type;
 import com.joaomariajaneiro.datejar.repository.ActivityRepository;
 import com.joaomariajaneiro.datejar.security.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @RequestMapping("/activities")
@@ -29,8 +31,8 @@ public class ActivityController {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    @GetMapping(value = "/category/{name}")
-    public List<Activity> getActivitiesFromCategory(@PathVariable String name,
+    @GetMapping(value = "/category/{name}/type/{categoryType}")
+    public List<Activity> getActivitiesFromCategory(@PathVariable String name, @PathVariable String categoryType,
                                                     @RequestHeader Map<String, String> headers) {
         if (!headers.containsKey("authorization")) {
             throw new AuthenticationException();
@@ -39,15 +41,15 @@ public class ActivityController {
         String username =
                 jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-        return activityRepository.getActivitiesOfCategory(name, username);
+        return activityRepository.getActivitiesOfCategory(name, username, getType(categoryType).ordinal());
 
     }
 
-    @PostMapping(value = "/category/{categoryName}/activity/{activityName}")
-    public String getActivitiesFromCategory(@PathVariable String categoryName,
-                                            @PathVariable String activityName,
-                                            @RequestBody String payload,
-                                            @RequestHeader Map<String, String> headers) throws JsonProcessingException {
+    @PostMapping(value = "/category/{categoryName}/type/{categoryType}/activity")
+    public String updateActivity(@PathVariable String categoryName,
+                                 @PathVariable String categoryType,
+                                 @RequestBody String payload,
+                                 @RequestHeader Map<String, String> headers) throws JsonProcessingException {
         if (!headers.containsKey("authorization")) {
             throw new AuthenticationException();
         }
@@ -57,8 +59,14 @@ public class ActivityController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-            activityRepository.update(jsonNode.get("new_activity_name").asText(), activityName
-                    , categoryName, username);
+            for (Activity activity : activityRepository.getActivitiesOfCategory(categoryName, username, getType(categoryType).ordinal())) {
+                if (activity.getName().equals(jsonNode.get("new_activity_name").asText())) {
+                    return "The Activity with that name already exists for the chosen category";
+                }
+            }
+
+            activityRepository.update(jsonNode.get("new_activity_name").asText(), jsonNode.get("old_activity_name").asText()
+                    , categoryName, username, getType(categoryType).ordinal());
             return "Success";
         } catch (Exception e) {
             return "There was an error updating your activity";
@@ -80,7 +88,7 @@ public class ActivityController {
                             .JWT_PREFIX, ""));
 
             activityRepository.delete(jsonNode.get("activity_name").asText(),
-                    jsonNode.get("category_name").asText(), username);
+                    jsonNode.get("category_name").asText(), username, getType(jsonNode.get("category_type").asText()).ordinal());
             return "Activity deleted successfuly";
         } catch (Exception e) {
             throw new RuntimeException("There was an error creating your activity");
@@ -100,12 +108,28 @@ public class ActivityController {
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil
                             .JWT_PREFIX, ""));
 
+            for (Activity activity :
+                    activityRepository.getActivitiesOfCategory(jsonNode.get("category_name").asText(), username, getType(jsonNode.get("category_type").asText()).ordinal())) {
+                if (activity.getName().equals(jsonNode.get("activity_name").asText())) {
+                    return "The Activity with that name already exists for the chosen category";
+                }
+            }
+
             Activity activity = new Activity(jsonNode.get("activity_name").asText());
-            activityRepository.save(activity, jsonNode.get("category_name").asText(), username);
+            activityRepository.save(activity, jsonNode.get("category_name").asText(), username, getType(jsonNode.get("category_type").asText()).ordinal());
             return "Activity created successfuly";
         } catch (Exception e) {
             throw new RuntimeException("There was an error creating your activity");
         }
+    }
+
+    Type getType(String type) {
+        try {
+            return Type.valueOf(type.toUpperCase());
+        } catch (Exception e) {
+            throw new RuntimeException("Category not found");
+        }
+
     }
 
 }
