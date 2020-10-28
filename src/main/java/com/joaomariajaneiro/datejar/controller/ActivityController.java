@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -30,6 +31,23 @@ public class ActivityController {
     private JwtUtil jwtTokenUtil;
 
     ObjectMapper objectMapper = new ObjectMapper();
+
+    @GetMapping(value = "/random/category/{name}/type/{categoryType}")
+    public Activity getRandomActivityFromCategory(@PathVariable String name, @PathVariable String categoryType,
+                                                  @RequestHeader Map<String, String> headers) {
+        if (!headers.containsKey("authorization")) {
+            throw new AuthenticationException();
+        }
+
+        String username =
+                jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
+
+        List<Activity> activitiesOfCategory = activityRepository.getActivitiesOfCategory(name, username, getType(categoryType).ordinal());
+        int rnd = new Random().nextInt(activitiesOfCategory.size());
+
+        return activitiesOfCategory.get(rnd);
+
+    }
 
     @GetMapping(value = "/category/{name}/type/{categoryType}")
     public List<Activity> getActivitiesFromCategory(@PathVariable String name, @PathVariable String categoryType,
