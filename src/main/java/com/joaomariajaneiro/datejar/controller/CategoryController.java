@@ -1,9 +1,11 @@
 package com.joaomariajaneiro.datejar.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.joaomariajaneiro.datejar.exceptions.AuthenticationException;
+import com.joaomariajaneiro.datejar.model.Activity;
 import com.joaomariajaneiro.datejar.model.Category;
 import com.joaomariajaneiro.datejar.model.User;
 import com.joaomariajaneiro.datejar.model.enums.Type;
@@ -66,7 +68,6 @@ public class CategoryController {
         return typesToCategories;
     }
 
-
     @PostMapping(value = "/add")
     public String addToPendingCategories(
             @RequestBody String payload,
@@ -87,6 +88,27 @@ public class CategoryController {
             return "There was an error creating the category";
         }
         return "success";
+    }
+
+    @PostMapping(value = "/edit/{categoryName}/type/{categoryType}")
+    public String updateActivity(@PathVariable String categoryName,
+                                 @PathVariable String categoryType,
+                                 @RequestBody String payload,
+                                 @RequestHeader Map<String, String> headers) throws JsonProcessingException {
+        if (!headers.containsKey("authorization")) {
+            throw new AuthenticationException();
+        }
+        JsonNode jsonNode = objectMapper.readTree(payload);
+
+        try {
+            String username =
+                    jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
+
+            categoryRepository.updateName(categoryName, getType(categoryType).ordinal(), username, jsonNode.get("new_category_name").asText());
+            return "Success";
+        } catch (Exception e) {
+            return "There was an error updating your activity";
+        }
     }
 
     Type getType(String type) {
