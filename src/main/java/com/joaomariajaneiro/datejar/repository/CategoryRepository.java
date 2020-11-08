@@ -36,7 +36,7 @@ public class CategoryRepository {
 
     public int updateName(String categoryName, int categoryType, String username, String newCategoryName) {
         return jdbcTemplate.update("UPDATE Category" +
-                        "    SET name = ? WHERE name = (SELECT c.name FROM Category c JOIN Users u ON c.user_id=u.id WHERE c.name=? AND c.type=? AND u.username = ?)",
+                        "    SET name = ? WHERE id = (SELECT c.id FROM Category c JOIN Users u ON c.user_id=u.id WHERE c.name=? AND c.type=? AND u.username = ?)",
                 newCategoryName, categoryName, categoryType, username);
     }
 }

@@ -36,7 +36,7 @@ public class ActivityRepository {
     public int update(String newActivityName, String oldActivityName, String categoryName,
                       String username, int categoryType) {
         return jdbcTemplate.update("UPDATE Activity" +
-                        "    SET name = ? WHERE name = (SELECT a.name FROM Activity a JOIN " +
+                        "    SET name = ? WHERE id = (SELECT a.id FROM Activity a JOIN " +
                         "Category c ON a.category_id=" +
                         "        c.id JOIN Users u ON c.user_id=u.id WHERE u.username = ? AND c" +
                         ".name = ? AND a.name = ? AND c.type = ?)",
@@ -46,7 +46,7 @@ public class ActivityRepository {
     public int delete(String activityName, String categoryName,
                       String username, int categoryType) {
         return jdbcTemplate.update("DELETE FROM Activity" +
-                        "    WHERE name = (SELECT a.name FROM Activity a JOIN Category c ON a" +
+                        "    WHERE id = (SELECT a.id FROM Activity a JOIN Category c ON a" +
                         ".category_id=" +
                         "        c.id JOIN Users u ON c.user_id=u.id WHERE u.username = ? AND c" +
                         ".name = ? AND a.name = ? AND c.type = ?)",
