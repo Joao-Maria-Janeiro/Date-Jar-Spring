@@ -29,8 +29,7 @@ public class UserRepository {
     public int save(User user) {
         return jdbcTemplate.update("INSERT INTO Users (id, username, password, email, picture)" +
                         " VALUES (" +
-                        "(SELECT setval(pg_get_serial_sequence('users', 'id'), coalesce(max(id)" +
-                        "+1, 1), false) FROM users)," +
+                        "(SELECT max(id) + 1 FROM users)," +
                         "?, " +
                         "?, " +
                         "?, " +
@@ -43,3 +42,4 @@ public class UserRepository {
     }
 
 }
+

@@ -16,31 +16,27 @@ public class ActivityRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<Activity> getActivitiesOfCategory(String categoryName, String username, int categoryType) {
+    public List<Activity> getActivitiesOfCategory(int categoryId) {
         return jdbcTemplate.query(
-                "SELECT a.id, a.name FROM Activity a JOIN Category c ON a.category_id=c.id JOIN " +
-                        "Users u ON c.user_id=u.id WHERE c.name= ? AND u.username = ? AND c.type = ?",
-                new Object[]{categoryName, username, categoryType}, new ActivityRowMapper()
+                "  SELECT a.id, a.name FROM Activity a JOIN Category c ON a.category_id=c.id " +
+                        " WHERE c.id= ?",
+                new Object[]{categoryId}, new ActivityRowMapper()
         );
     }
 
-    public int save(Activity activity, String categoryName, String username, int categoryType) {
+    public int save(Activity activity, int categoryId) {
         return jdbcTemplate.update("  INSERT INTO Activity (id, name, category_id) VALUES (" +
                         "(SELECT " +
-                        "setval (pg_get_serial_sequence('activity', 'id'), coalesce(max(id)+1, 1)" +
-                        ",false) FROM Activity),?, (SELECT c.id FROM Category c JOIN Users u ON u" +
-                        ".id=c.user_id WHERE c.name = ? AND u.username = ? AND c.type = ?))",
-                activity.getName(), categoryName, username, categoryType);
+                        "max(id) + 1 FROM Activity),?, ?)",
+                activity.getName(), categoryId);
     }
 
-    public int update(String newActivityName, String oldActivityName, String categoryName,
-                      String username, int categoryType) {
-        return jdbcTemplate.update("UPDATE Activity" +
+    public int update(String newActivityName, String oldActivityName, int categoryId) {
+        return jdbcTemplate.update("  UPDATE Activity" +
                         "    SET name = ? WHERE id = (SELECT a.id FROM Activity a JOIN " +
                         "Category c ON a.category_id=" +
-                        "        c.id JOIN Users u ON c.user_id=u.id WHERE u.username = ? AND c" +
-                        ".name = ? AND a.name = ? AND c.type = ?)",
-                newActivityName, username, categoryName, oldActivityName, categoryType);
+                        "        c.id WHERE c.id = ? AND a.name = ?)",
+                newActivityName, categoryId, oldActivityName);
     }
 
     public int delete(String activityName, String categoryName,
@@ -55,14 +51,4 @@ public class ActivityRepository {
 }
 
 
-//AND a.name = ?
-
-//    UPDATE Activity
-//    SET name = ? WHERE name = (SELECT a.name FROM Activity a JOIN Category c ON a.category_id=
-//        c.id JOIN Users u ON c.user_id=u.id WHERE u.username = ? AND c.name = ? AND a.name = ?)
-
-
-//    DELETE FROM Activity
-//    WHERE name = (SELECT a.name FROM Activity a JOIN Category c ON a.category_id=
-//        c.id JOIN Users u ON c.user_id=u.id WHERE u.username = ? AND c.name = ? AND a.name = ?)
 

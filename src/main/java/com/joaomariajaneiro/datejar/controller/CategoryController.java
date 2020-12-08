@@ -40,7 +40,7 @@ public class CategoryController {
     ObjectMapper objectMapper = new ObjectMapper();
 
     @GetMapping(value = "/all")
-    public Map<String, List<String>> getPendindCategories(@RequestHeader Map<String, String> headers) {
+    public Map<String, List<Category>> getPendindCategories(@RequestHeader Map<String, String> headers) {
         if (!headers.containsKey("authorization")) {
             throw new AuthenticationException();
         }
@@ -50,18 +50,18 @@ public class CategoryController {
         List<Category> allUserPendingCategories =
                 categoryRepository.getAllUserPendingCategories(username);
 
-        Map<String, List<String>> typesToCategories = new HashMap<>();
+        Map<String, List<Category>> typesToCategories = new HashMap<>();
         allUserPendingCategories.forEach(
                 category -> {
                     if (typesToCategories.containsKey(category.getType().name())) {
-                        List<String> categories = typesToCategories.get(category.getType().name());
-                        categories.add(category.getName());
+                        List<Category> categories =
+                                typesToCategories.get(category.getType().name());
+                        categories.add(category);
                         typesToCategories.put(category.getType().name(), categories);
                     } else {
-                        List<String> categories = new ArrayList<>();
-                        categories.add(category.getName());
-                        typesToCategories.put(category.getType().name(),
-                                categories);
+                        List<Category> categories = new ArrayList<>();
+                        categories.add(category);
+                        typesToCategories.put(category.getType().name(), categories);
                     }
                 }
         );
@@ -90,11 +90,9 @@ public class CategoryController {
         return "success";
     }
 
-    @PostMapping(value = "/edit/{categoryName}/type/{categoryType}")
-    public String updateActivity(@PathVariable String categoryName,
-                                 @PathVariable String categoryType,
-                                 @RequestBody String payload,
-                                 @RequestHeader Map<String, String> headers) throws JsonProcessingException {
+    @PostMapping(value = "/edit")
+    public String updateCategoryName(@RequestBody String payload,
+                                     @RequestHeader Map<String, String> headers) throws JsonProcessingException {
         if (!headers.containsKey("authorization")) {
             throw new AuthenticationException();
         }
@@ -104,7 +102,8 @@ public class CategoryController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-            categoryRepository.updateName(categoryName, getType(categoryType).ordinal(), username, jsonNode.get("new_category_name").asText());
+            categoryRepository.updateName(jsonNode.get("new_category_name").asText(),
+                    jsonNode.get("id").asInt());
             return "Success";
         } catch (Exception e) {
             return "There was an error updating your activity";

@@ -32,8 +32,8 @@ public class ActivityController {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    @GetMapping(value = "/random/category/{name}/type/{categoryType}")
-    public Activity getRandomActivityFromCategory(@PathVariable String name, @PathVariable String categoryType,
+    @GetMapping(value = "/random/category/{categoryId}")
+    public Activity getRandomActivityFromCategory(@PathVariable String categoryId,
                                                   @RequestHeader Map<String, String> headers) {
         if (!headers.containsKey("authorization")) {
             throw new AuthenticationException();
@@ -42,15 +42,16 @@ public class ActivityController {
         String username =
                 jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-        List<Activity> activitiesOfCategory = activityRepository.getActivitiesOfCategory(name, username, getType(categoryType).ordinal());
+        List<Activity> activitiesOfCategory =
+                activityRepository.getActivitiesOfCategory(Integer.valueOf(categoryId));
         int rnd = new Random().nextInt(activitiesOfCategory.size());
 
         return activitiesOfCategory.get(rnd);
 
     }
 
-    @GetMapping(value = "/category/{name}/type/{categoryType}")
-    public List<Activity> getActivitiesFromCategory(@PathVariable String name, @PathVariable String categoryType,
+    @GetMapping(value = "/category/{categoryId}")
+    public List<Activity> getActivitiesFromCategory(@PathVariable int categoryId,
                                                     @RequestHeader Map<String, String> headers) {
         if (!headers.containsKey("authorization")) {
             throw new AuthenticationException();
@@ -59,15 +60,13 @@ public class ActivityController {
         String username =
                 jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-        return activityRepository.getActivitiesOfCategory(name, username, getType(categoryType).ordinal());
-
+        return activityRepository.getActivitiesOfCategory(categoryId);
     }
 
-    @PostMapping(value = "/category/{categoryName}/type/{categoryType}/activity")
-    public String updateActivity(@PathVariable String categoryName,
-                                 @PathVariable String categoryType,
-                                 @RequestBody String payload,
-                                 @RequestHeader Map<String, String> headers) throws JsonProcessingException {
+    @PostMapping(value = "/update")
+    public String updateActivity(
+            @RequestBody String payload,
+            @RequestHeader Map<String, String> headers) throws JsonProcessingException {
         if (!headers.containsKey("authorization")) {
             throw new AuthenticationException();
         }
@@ -77,14 +76,15 @@ public class ActivityController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-            for (Activity activity : activityRepository.getActivitiesOfCategory(categoryName, username, getType(categoryType).ordinal())) {
+            for (Activity activity : activityRepository.getActivitiesOfCategory(jsonNode.get(
+                    "category_id").asInt())) {
                 if (activity.getName().equals(jsonNode.get("new_activity_name").asText())) {
                     return "The Activity with that name already exists for the chosen category";
                 }
             }
 
-            activityRepository.update(jsonNode.get("new_activity_name").asText(), jsonNode.get("old_activity_name").asText()
-                    , categoryName, username, getType(categoryType).ordinal());
+            activityRepository.update(jsonNode.get("new_activity_name").asText(), jsonNode.get(
+                    "old_activity_name").asText(), jsonNode.get("category_id").asInt());
             return "Success";
         } catch (Exception e) {
             return "There was an error updating your activity";
@@ -106,7 +106,8 @@ public class ActivityController {
                             .JWT_PREFIX, ""));
 
             activityRepository.delete(jsonNode.get("activity_name").asText(),
-                    jsonNode.get("category_name").asText(), username, getType(jsonNode.get("category_type").asText()).ordinal());
+                    jsonNode.get("category_name").asText(), username, getType(jsonNode.get(
+                            "category_type").asText()).ordinal());
             return "Activity deleted successfuly";
         } catch (Exception e) {
             throw new RuntimeException("There was an error creating your activity");
@@ -127,14 +128,14 @@ public class ActivityController {
                             .JWT_PREFIX, ""));
 
             for (Activity activity :
-                    activityRepository.getActivitiesOfCategory(jsonNode.get("category_name").asText(), username, getType(jsonNode.get("category_type").asText()).ordinal())) {
+                    activityRepository.getActivitiesOfCategory(jsonNode.get("category_id").asInt())) {
                 if (activity.getName().equals(jsonNode.get("activity_name").asText())) {
                     return "The Activity with that name already exists for the chosen category";
                 }
             }
 
             Activity activity = new Activity(jsonNode.get("activity_name").asText());
-            activityRepository.save(activity, jsonNode.get("category_name").asText(), username, getType(jsonNode.get("category_type").asText()).ordinal());
+            activityRepository.save(activity, jsonNode.get("category_id").asInt());
             return "Activity created successfuly";
         } catch (Exception e) {
             throw new RuntimeException("There was an error creating your activity");

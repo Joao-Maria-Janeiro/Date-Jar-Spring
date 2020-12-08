@@ -25,19 +25,18 @@ public class CategoryRepository {
     }
 
     public int save(Category category, String username) {
-        return jdbcTemplate.update("INSERT INTO Category (id, name, type, user_id) " +
+        return jdbcTemplate.update("  INSERT INTO Category (id, name, type, user_id) " +
                         "VALUES (" +
-                        "(SELECT setval(pg_get_serial_sequence('category', 'id'), coalesce(max" +
-                        "(id)+1, 1),false) FROM Category)," +
+                        "(SELECT max(id) + 1 FROM Category)," +
                         "?, ?, " +
                         "(SELECT id FROM Users WHERE username = ?))", category.getName(),
                 category.getType().ordinal(), username);
     }
 
-    public int updateName(String categoryName, int categoryType, String username, String newCategoryName) {
+    public int updateName(String newCategoryName, int categoryId) {
         return jdbcTemplate.update("UPDATE Category" +
-                        "    SET name = ? WHERE id = (SELECT c.id FROM Category c JOIN Users u ON c.user_id=u.id WHERE c.name=? AND c.type=? AND u.username = ?)",
-                newCategoryName, categoryName, categoryType, username);
+                        "    SET name = ? WHERE id = ?",
+                newCategoryName, categoryId);
     }
 }
 
