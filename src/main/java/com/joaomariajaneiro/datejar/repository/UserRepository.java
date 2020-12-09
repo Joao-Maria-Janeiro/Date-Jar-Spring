@@ -26,10 +26,18 @@ public class UserRepository {
         return user;
     }
 
+    public int associateUser(String username, String partnerUsername) {
+        return jdbcTemplate.update("UPDATE Users" +
+                        "    SET partner_id = (SELECT id FROM Users WHERE username=?) WHERE " +
+                        "username" +
+                        " = ?",
+                partnerUsername, username);
+    }
+
     public int save(User user) {
         return jdbcTemplate.update("INSERT INTO Users (id, username, password, email, picture)" +
                         " VALUES (" +
-                        "(SELECT max(id) + 1 FROM users)," +
+                        "(SELECT COALESCE(max(id), 0) + 1 FROM users)," +
                         "?, " +
                         "?, " +
                         "?, " +
@@ -42,4 +50,5 @@ public class UserRepository {
     }
 
 }
+
 

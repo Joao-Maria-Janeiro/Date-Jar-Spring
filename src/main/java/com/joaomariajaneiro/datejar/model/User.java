@@ -15,17 +15,20 @@ public class User {
 
     private String picture;
 
+    private int partner_id;
+
     private List<Category> categories;
 
     public User() {
     }
 
-    public User(long id, String username, String email, String password, String picture) {
+    public User(long id, String username, String email, String password, String picture, int partner_id) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.picture = picture;
+        this.partner_id = partner_id;
     }
 
     public User(long id, String username, String email, String password, String picture, List<Category> categories) {

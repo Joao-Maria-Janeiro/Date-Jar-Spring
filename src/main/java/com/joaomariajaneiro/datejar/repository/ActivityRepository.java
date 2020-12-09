@@ -27,7 +27,7 @@ public class ActivityRepository {
     public int save(Activity activity, int categoryId) {
         return jdbcTemplate.update("  INSERT INTO Activity (id, name, category_id) VALUES (" +
                         "(SELECT " +
-                        "max(id) + 1 FROM Activity),?, ?)",
+                        "COALESCE(max(id), 0) FROM Activity),?, ?)",
                 activity.getName(), categoryId);
     }
 

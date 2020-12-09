@@ -27,7 +27,7 @@ public class CategoryRepository {
     public int save(Category category, String username) {
         return jdbcTemplate.update("  INSERT INTO Category (id, name, type, user_id) " +
                         "VALUES (" +
-                        "(SELECT max(id) + 1 FROM Category)," +
+                        "(SELECT COALESCE(max(id), 0) FROM Category)," +
                         "?, ?, " +
                         "(SELECT id FROM Users WHERE username = ?))", category.getName(),
                 category.getType().ordinal(), username);

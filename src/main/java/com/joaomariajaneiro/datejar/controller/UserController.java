@@ -14,10 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Slf4j
 @RequestMapping("/users")
@@ -61,7 +60,7 @@ public class UserController {
         JsonNode jsonNode = objectMapper.readTree(payload);
 
         User user;
-//        try {
+        try {
             user = new User(
                     jsonNode.get("username").asText(),
                     jsonNode.get("email").asText(),
@@ -69,9 +68,9 @@ public class UserController {
                     jsonNode.get("picture").asText()
             );
             userRepository.save(user);
-//        } catch (Exception e) {
-//            return "An error occurred while creating your account, please try again";
-//        }
+        } catch (Exception e) {
+            return "An error occurred while creating your account, please try again";
+        }
 
         try {
             authenticationManager.authenticate(
@@ -87,6 +86,26 @@ public class UserController {
         output.addProperty("token", jwtTokenUtil.generateToken(user.getUsername()));
         output.addProperty("picture", user.getPicture());
         return output.toString();
+    }
+
+
+    @PostMapping(value = "/associate")
+    public String associateUser(@RequestHeader Map<String, String> headers,
+                                @RequestBody String payload) throws JsonProcessingException {
+        JsonNode jsonNode = objectMapper.readTree(payload);
+
+        try {
+            String username =
+                    jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
+
+            userRepository.associateUser(jsonNode.get("username").asText(),
+                    jsonNode.get("partner_username").asText());
+        } catch (Exception e) {
+            return "The user association failed";
+        }
+
+
+        return "Success";
     }
 }
 
