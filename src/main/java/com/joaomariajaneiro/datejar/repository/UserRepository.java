@@ -20,7 +20,7 @@ public class UserRepository {
 
     public User findByUsername(String username) {
         User user = jdbcTemplate.queryForObject(
-                "SELECT * FROM Users WHERE username LIKE ?",
+                "SELECT * FROM Users WHERE username = ?",
                 new Object[]{username},
                 new UsersRowMapper());
         return user;
@@ -32,6 +32,22 @@ public class UserRepository {
                         "username" +
                         " = ?",
                 partnerUsername, username);
+    }
+
+    public User associatedUser(String username) {
+        User user = jdbcTemplate.queryForObject(
+                "SELECT * FROM Users WHERE id = (SELECT partner_id FROM Users WHERE username = ?)",
+                new Object[]{username},
+                new UsersRowMapper());
+        return user;
+    }
+
+    public int removeAssociatedUser(String username) {
+        return jdbcTemplate.update("UPDATE Users" +
+                        "    SET partner_id = NULL WHERE " +
+                        "username" +
+                        " = ?",
+                username);
     }
 
     public int save(User user) {

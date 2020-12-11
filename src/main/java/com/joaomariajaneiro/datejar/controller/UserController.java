@@ -98,14 +98,38 @@ public class UserController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-            userRepository.associateUser(jsonNode.get("username").asText(),
+            userRepository.associateUser(username,
                     jsonNode.get("partner_username").asText());
         } catch (Exception e) {
             return "The user association failed";
         }
-
-
         return "Success";
     }
+
+    @GetMapping(value = "/friend")
+    public String getAssociatedUser(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
+        try {
+            String username =
+                    jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
+
+            return userRepository.associatedUser(username).getUsername();
+        } catch (Exception e) {
+            return "There was an error retrieving your friend";
+        }
+    }
+
+    @PostMapping(value = "/remove-friend")
+    public String removeAssociateUser(@RequestHeader Map<String, String> headers) throws JsonProcessingException {
+        try {
+            String username =
+                    jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
+
+            userRepository.removeAssociatedUser(username);
+        } catch (Exception e) {
+            return "The user removal failed";
+        }
+        return "Success";
+    }
+
 }
 
