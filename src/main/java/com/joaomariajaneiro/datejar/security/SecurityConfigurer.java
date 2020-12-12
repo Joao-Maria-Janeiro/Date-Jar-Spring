@@ -33,6 +33,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
         http.csrf().disable()
                 .authorizeRequests().antMatchers("/users/authenticate").permitAll()
                 .antMatchers("/users/create").permitAll()
+                .antMatchers("/users/confirm-friend/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling().and().sessionManagement()

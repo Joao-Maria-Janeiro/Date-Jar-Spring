@@ -9,6 +9,7 @@ import com.joaomariajaneiro.datejar.exceptions.AuthenticationException;
 import com.joaomariajaneiro.datejar.model.User;
 import com.joaomariajaneiro.datejar.repository.UserRepository;
 import com.joaomariajaneiro.datejar.security.JwtUtil;
+import com.joaomariajaneiro.datejar.utils.SendEmail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -98,8 +99,32 @@ public class UserController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-            userRepository.associateUser(username,
-                    jsonNode.get("partner_username").asText());
+
+            String partnerEmail = userRepository.findByUsername(jsonNode.get(
+                    "partner_username").asText()).getEmail();
+            String email = userRepository.findByUsername(username).getEmail();
+            SendEmail sendEmail = new SendEmail(partnerEmail, "localhost");
+
+            sendEmail.sendMail(jsonNode.get(
+                    "partner_username").asText() + " wants to be your friend on Me2",
+                    "http://192.168.1.185:8080/users/confirm-friend/" + email + "/" + partnerEmail);
+        } catch (Exception e) {
+            return "The user association request failed";
+        }
+        return "Success";
+    }
+
+    @GetMapping(value = "/confirm-friend/{email}/{partnerEmail}")
+    public String confirmAssociateUSer(@RequestHeader Map<String, String> headers,
+                                       @PathVariable String email,
+                                       @PathVariable String partnerEmail) throws JsonProcessingException {
+
+        try {
+            userRepository.associateUser(email,
+                    partnerEmail);
+            userRepository.associateUser(partnerEmail,
+                    email);
+
         } catch (Exception e) {
             return "The user association failed";
         }

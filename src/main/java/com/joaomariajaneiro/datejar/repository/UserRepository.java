@@ -28,8 +28,8 @@ public class UserRepository {
 
     public int associateUser(String username, String partnerUsername) {
         return jdbcTemplate.update("UPDATE Users" +
-                        "    SET partner_id = (SELECT id FROM Users WHERE username=?) WHERE " +
-                        "username" +
+                        "    SET partner_id = (SELECT id FROM Users WHERE email=?) WHERE " +
+                        "email" +
                         " = ?",
                 partnerUsername, username);
     }
