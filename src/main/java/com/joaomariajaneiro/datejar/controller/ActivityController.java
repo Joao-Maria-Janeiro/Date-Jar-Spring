@@ -42,12 +42,15 @@ public class ActivityController {
         String username =
                 jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-        List<Activity> activitiesOfCategory =
-                activityRepository.getActivitiesOfCategory(Integer.valueOf(categoryId));
-        int rnd = new Random().nextInt(activitiesOfCategory.size());
+        try {
+            List<Activity> activitiesOfCategory =
+                    activityRepository.getActivitiesOfCategory(Integer.valueOf(categoryId));
+            int rnd = new Random().nextInt(activitiesOfCategory.size());
 
-        return activitiesOfCategory.get(rnd);
-
+            return activitiesOfCategory.get(rnd);
+        } catch (Exception e) {
+            return new Activity();
+        }
     }
 
     @GetMapping(value = "/category/{categoryId}")

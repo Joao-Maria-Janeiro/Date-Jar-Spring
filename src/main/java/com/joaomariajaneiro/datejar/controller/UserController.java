@@ -149,7 +149,10 @@ public class UserController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
+            User associatedUser = userRepository.associatedUser(username);
+
             userRepository.removeAssociatedUser(username);
+            userRepository.removeAssociatedUser(associatedUser.getUsername());
         } catch (Exception e) {
             return "The user removal failed";
         }

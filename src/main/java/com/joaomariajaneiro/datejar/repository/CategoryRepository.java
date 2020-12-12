@@ -18,11 +18,13 @@ public class CategoryRepository {
     }
 
     public List<Category> getAllUserPendingCategories(String username) {
-        return jdbcTemplate.query("SELECT c.id, c.name, c.type FROM Users u JOIN " +
-                        "Category c " +
-                        "ON u.id=c.user_id WHERE u.username = ?", new Object[]{username},
+        return jdbcTemplate.query("SELECT DISTINCT c.id, c.name, c.type FROM Users u, Category c " +
+                        " WHERE u.username = ? AND c" +
+                        ".user_id =u.id OR c.user_id=u.partner_id",
+                new Object[]{username},
                 new CategoryRowMapper());
     }
+
 
     public int save(Category category, String username) {
         return jdbcTemplate.update("  INSERT INTO Category (id, name, type, user_id) " +
