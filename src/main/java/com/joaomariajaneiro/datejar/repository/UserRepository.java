@@ -26,6 +26,14 @@ public class UserRepository {
         return user;
     }
 
+    public User findByEmail(String email) {
+        User user = jdbcTemplate.queryForObject(
+                "SELECT * FROM Users WHERE email = ?",
+                new Object[]{email},
+                new UsersRowMapper());
+        return user;
+    }
+
     public int associateUser(String username, String partnerUsername) {
         return jdbcTemplate.update("UPDATE Users" +
                         "    SET partner_id = (SELECT id FROM Users WHERE email=?) WHERE " +
@@ -42,12 +50,12 @@ public class UserRepository {
         return user;
     }
 
-    public int removeAssociatedUser(String username) {
+    public int removeAssociatedUser(Long id, String username) {
         return jdbcTemplate.update("UPDATE Users" +
                         "    SET partner_id = NULL WHERE " +
                         "username" +
-                        " = ?",
-                username);
+                        " = ? OR partner_id=?",
+                username, id);
     }
 
     public int save(User user) {

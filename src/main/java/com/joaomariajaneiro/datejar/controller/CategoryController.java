@@ -110,6 +110,25 @@ public class CategoryController {
         }
     }
 
+    @PostMapping(value = "/remove/{categoryName}")
+    public String removeCategory(@PathVariable String categoryName,
+                                 @RequestHeader Map<String, String> headers) {
+        if (!headers.containsKey("authorization")) {
+            throw new AuthenticationException();
+        }
+
+        try {
+            String username =
+                    jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
+
+            categoryRepository.removeActivitiesFromCategory(categoryName, username);
+            categoryRepository.remove(categoryName, username);
+            return "Success";
+        } catch (Exception e) {
+            return "There was an error deleting your category";
+        }
+    }
+
     Type getType(String type) {
         try {
             return Type.valueOf(type.toUpperCase());

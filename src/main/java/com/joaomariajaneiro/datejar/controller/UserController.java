@@ -105,9 +105,8 @@ public class UserController {
             String email = userRepository.findByUsername(username).getEmail();
             SendEmail sendEmail = new SendEmail(partnerEmail, "localhost");
 
-            sendEmail.sendMail(jsonNode.get(
-                    "partner_username").asText() + " wants to be your friend on Me2",
-                    "http://192.168.1.185:8080/users/confirm-friend/" + email + "/" + partnerEmail);
+            sendEmail.sendMail(username + " wants to be your friend on Me2",
+                    "http://192.168.1.8:8080/users/confirm-friend/" + email + "/" + partnerEmail);
         } catch (Exception e) {
             return "The user association request failed";
         }
@@ -118,16 +117,24 @@ public class UserController {
     public String confirmAssociateUSer(@RequestHeader Map<String, String> headers,
                                        @PathVariable String email,
                                        @PathVariable String partnerEmail) throws JsonProcessingException {
+//        try {
 
-        try {
-            userRepository.associateUser(email,
-                    partnerEmail);
-            userRepository.associateUser(partnerEmail,
-                    email);
+        userRepository.associateUser(email,
+                partnerEmail);
+        userRepository.associateUser(partnerEmail,
+                email);
 
-        } catch (Exception e) {
-            return "The user association failed";
-        }
+        SendEmail sendEmail = new SendEmail(email, "localhost");
+
+        User user = userRepository.findByEmail(partnerEmail);
+
+        sendEmail.sendMail(user.getUsername() + " is now your friend on Me2",
+                "Congratulations getting your friend on Me2!\n Time to start hanging out, add" +
+                        " your first category and activity now!");
+
+//        } catch (Exception e) {
+//            return "The user association failed";
+//        }
         return "Success";
     }
 
@@ -149,10 +156,12 @@ public class UserController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
+            User user = userRepository.findByUsername(username);
             User associatedUser = userRepository.associatedUser(username);
 
-            userRepository.removeAssociatedUser(username);
-            userRepository.removeAssociatedUser(associatedUser.getUsername());
+            userRepository.removeAssociatedUser(user.getId(), username);
+            userRepository.removeAssociatedUser(associatedUser.getId(),
+                    associatedUser.getUsername());
         } catch (Exception e) {
             return "The user removal failed";
         }
