@@ -127,7 +127,7 @@ public class UserController {
             SendEmail sendEmail = new SendEmail(partnerEmail, "localhost");
 
             sendEmail.sendMail(username + " wants to be your friend on Me2",
-                    "http://192.168.1.8:8080/users/confirm-friend/" + email + "/" + partnerEmail);
+                    System.getenv("backend_url") + "users/confirm-friend/" + email + "/" + partnerEmail);
         } catch (Exception e) {
             return "The user association request failed";
         }
