@@ -26,18 +26,21 @@ public class SendEmail {
         prop.put("mail.smtp.auth", "true");
         prop.put("mail.smtp.starttls.enable", "true"); //TLS
 
+        String username = System.getenv("username");
+        String password = System.getenv("password");
+
 
         Session session = Session.getInstance(prop,
                 new javax.mail.Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(EmailConstants.getUsername(),
-                                EmailConstants.getPassword());
+                        return new PasswordAuthentication(username,
+                                password);
                     }
                 });
 
         try {
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(EmailConstants.getUsername()));
+            message.setFrom(new InternetAddress(username));
             message.setRecipients(
                     Message.RecipientType.TO,
                     InternetAddress.parse(to)

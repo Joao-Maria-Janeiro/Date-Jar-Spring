@@ -11,11 +11,17 @@ import com.joaomariajaneiro.datejar.repository.UserRepository;
 import com.joaomariajaneiro.datejar.security.JwtUtil;
 import com.joaomariajaneiro.datejar.utils.SendEmail;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.validator.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 
 import java.util.Map;
 
@@ -35,6 +41,9 @@ public class UserController {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
     @PostMapping(value = "/authenticate")
     public String login(@RequestBody String payload) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(payload);
@@ -44,33 +53,57 @@ public class UserController {
                     new UsernamePasswordAuthenticationToken(jsonNode.get("username").asText(),
                             jsonNode.get("password").asText())
             );
-        } catch (BadCredentialsException e) {
+        } catch (Exception e) {
             throw new AuthenticationException();
         }
 
-        final User user = userRepository.findByUsername(jsonNode.get("username").asText());
+        User user;
+        try {
+            user = userRepository.findByUsername(jsonNode.get("username").asText());
+        } catch (Exception e) {
+            throw new AuthenticationException();
+        }
 
-        JsonObject output = new JsonObject();
-        output.addProperty("token", jwtTokenUtil.generateToken(user.getUsername()));
-        output.addProperty("picture", user.getPicture());
-        return output.toString();
+
+        return genereateAuthOutput(user).toString();
     }
 
     @PostMapping(value = "/create")
     public String signup(@RequestBody String payload) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(payload);
 
+        EmailValidator validator = EmailValidator.getInstance();
+
+        if (!validator.isValid(jsonNode.get("email").asText())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The provided email is not " +
+                    "valid");
+        }
+
+
         User user;
         try {
             user = new User(
                     jsonNode.get("username").asText(),
                     jsonNode.get("email").asText(),
-                    jsonNode.get("password").asText(),
+                    passwordEncoder.encode(jsonNode.get("password").asText()),
                     jsonNode.get("picture").asText()
             );
             userRepository.save(user);
+        } catch (DataAccessException e) {
+            String trim = e.getCause().getLocalizedMessage().split("Detail:")[1].trim();
+            trim = trim.substring(trim.length() - 16);
+            if (trim.contains("already exists.")) {
+                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Username and/or " +
+                        "email" +
+                        " already taken");
+            } else {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error " +
+                        "occurred while creating your account, please try again");
+            }
         } catch (Exception e) {
-            return "An error occurred while creating your account, please try again";
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error " +
+                    "occurred while creating your account, please try again");
+
         }
 
         try {
@@ -79,14 +112,12 @@ public class UserController {
                             jsonNode.get("password").asText())
             );
         } catch (BadCredentialsException e) {
-            return "Your account was created successfully but an error occurred while" +
-                    " trying to sign you in. Please sign up manually";
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Your account was created " +
+                    "successfully but an error occurred while" +
+                    " trying to sign you in. Please try to sign in manually");
         }
 
-        JsonObject output = new JsonObject();
-        output.addProperty("token", jwtTokenUtil.generateToken(user.getUsername()));
-        output.addProperty("picture", user.getPicture());
-        return output.toString();
+        return genereateAuthOutput(user).toString();
     }
 
 
@@ -117,24 +148,24 @@ public class UserController {
     public String confirmAssociateUSer(@RequestHeader Map<String, String> headers,
                                        @PathVariable String email,
                                        @PathVariable String partnerEmail) throws JsonProcessingException {
-//        try {
+        try {
 
-        userRepository.associateUser(email,
-                partnerEmail);
-        userRepository.associateUser(partnerEmail,
-                email);
+            userRepository.associateUser(email,
+                    partnerEmail);
+            userRepository.associateUser(partnerEmail,
+                    email);
 
-        SendEmail sendEmail = new SendEmail(email, "localhost");
+            SendEmail sendEmail = new SendEmail(email, "localhost");
 
-        User user = userRepository.findByEmail(partnerEmail);
+            User user = userRepository.findByEmail(partnerEmail);
 
-        sendEmail.sendMail(user.getUsername() + " is now your friend on Me2",
-                "Congratulations getting your friend on Me2!\n Time to start hanging out, add" +
-                        " your first category and activity now!");
+            sendEmail.sendMail(user.getUsername() + " is now your friend on Me2",
+                    "Congratulations getting your friend on Me2!\n Time to start hanging out, add" +
+                            " your first category and activity now!");
 
-//        } catch (Exception e) {
-//            return "The user association failed";
-//        }
+        } catch (Exception e) {
+            return "The user association failed";
+        }
         return "Success";
     }
 
@@ -166,6 +197,13 @@ public class UserController {
             return "The user removal failed";
         }
         return "Success";
+    }
+
+    private JsonObject genereateAuthOutput(User user) {
+        JsonObject output = new JsonObject();
+        output.addProperty("token", jwtTokenUtil.generateToken(user.getUsername()));
+        output.addProperty("picture", user.getPicture());
+        return output;
     }
 
 }

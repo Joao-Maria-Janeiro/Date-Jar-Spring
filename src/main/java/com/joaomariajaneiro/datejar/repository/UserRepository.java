@@ -3,10 +3,13 @@ package com.joaomariajaneiro.datejar.repository;
 import com.joaomariajaneiro.datejar.model.User;
 import com.joaomariajaneiro.datejar.repository.row_mappers.UsersRowMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.InvalidResultSetAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 
 @Repository
 public class UserRepository {
@@ -58,19 +61,27 @@ public class UserRepository {
                 username, id);
     }
 
-    public int save(User user) {
-        return jdbcTemplate.update("INSERT INTO Users (id, username, password, email, picture)" +
-                        " VALUES (" +
-                        "(SELECT COALESCE(max(id), 0) + 1 FROM users)," +
-                        "?, " +
-                        "?, " +
-                        "?, " +
-                        "?)",
-                user.getUsername(),
-                user.getPassword(),
-                user.getEmail(),
-                user.getPicture()
-        );
+    public int save(User user) throws DataAccessException  {
+        try {
+            return jdbcTemplate.update("INSERT INTO Users (id, username, password, email, " +
+                            "picture)" +
+                            " VALUES (" +
+                            "(SELECT COALESCE(max(id), 0) + 1 FROM users)," +
+                            "?, " +
+                            "?, " +
+                            "?, " +
+                            "?)",
+                    user.getUsername(),
+                    user.getPassword(),
+                    user.getEmail(),
+                    user.getPicture()
+            );
+        } catch (InvalidResultSetAccessException e) {
+            throw e;
+        } catch (DataAccessException e) {
+            throw e;
+        }
+
     }
 
 }
