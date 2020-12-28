@@ -11,7 +11,6 @@ import com.joaomariajaneiro.datejar.repository.UserRepository;
 import com.joaomariajaneiro.datejar.security.JwtUtil;
 import com.joaomariajaneiro.datejar.utils.SendEmail;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.validator.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -21,7 +20,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
 
 import java.util.Map;
 
@@ -71,14 +69,6 @@ public class UserController {
     @PostMapping(value = "/create")
     public String signup(@RequestBody String payload) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(payload);
-
-        EmailValidator validator = EmailValidator.getInstance();
-
-        if (!validator.isValid(jsonNode.get("email").asText())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The provided email is not " +
-                    "valid");
-        }
-
 
         User user;
         try {
