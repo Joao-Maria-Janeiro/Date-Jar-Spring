@@ -3,11 +3,8 @@ package com.joaomariajaneiro.datejar.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import com.joaomariajaneiro.datejar.exceptions.AuthenticationException;
-import com.joaomariajaneiro.datejar.model.Activity;
 import com.joaomariajaneiro.datejar.model.Category;
-import com.joaomariajaneiro.datejar.model.User;
 import com.joaomariajaneiro.datejar.model.enums.Type;
 import com.joaomariajaneiro.datejar.repository.CategoryRepository;
 import com.joaomariajaneiro.datejar.repository.UserRepository;
@@ -21,7 +18,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequestMapping("/categories")
