@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RequestMapping("/users")
@@ -70,6 +71,10 @@ public class UserController {
     public String signup(@RequestBody String payload) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(payload);
 
+        if (!emailIsValid(jsonNode.get("email").asText())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Email");
+        }
+
         User user;
         try {
             user = new User(
@@ -115,6 +120,7 @@ public class UserController {
     public String associateUser(@RequestHeader Map<String, String> headers,
                                 @RequestBody String payload) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(payload);
+
 
         try {
             String username =
@@ -194,6 +200,18 @@ public class UserController {
         output.addProperty("token", jwtTokenUtil.generateToken(user.getUsername()));
         output.addProperty("picture", user.getPicture());
         return output;
+    }
+
+    public static boolean emailIsValid(String email) {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\." +
+                "[a-zA-Z0-9_+&*-]+)*@" +
+                "(?:[a-zA-Z0-9-]+\\.)+[a-z" +
+                "A-Z]{2,7}$";
+
+        Pattern pat = Pattern.compile(emailRegex);
+        if (email == null)
+            return false;
+        return pat.matcher(email).matches();
     }
 
 }
