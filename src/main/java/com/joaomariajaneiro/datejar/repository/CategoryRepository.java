@@ -35,25 +35,28 @@ public class CategoryRepository {
                 category.getType().ordinal(), username);
     }
 
-    public int updateName(String newCategoryName, int categoryId) {
-        return jdbcTemplate.update("UPDATE Category" +
-                        "    SET name = ? WHERE id = ?",
-                newCategoryName, categoryId);
+    public int updateName(String newCategoryName, int categoryId, String username) {
+        return jdbcTemplate.update("UPDATE Category SET name = ? WHERE id = ? AND (user_id = " +
+                        "(SELECT u1.id FROM Users u1 where u1.username = ?) OR user_id =(SELECT " +
+                        "u2.partner_id FROM Users u2 WHERE u2.username=?))",
+                newCategoryName, categoryId, username, username);
     }
 
-    public int removeActivitiesFromCategory(String categoryName, String username) {
+    public int removeActivitiesFromCategory(Long categoryId, String username) {
         return jdbcTemplate.update("DELETE FROM activity WHERE category_id = (SELECT DISTINCT c" +
-                        ".id FROM category c, Users u WHERE c.name = ? AND ((u.username = ? AND c" +
+                        ".id FROM category c, Users u WHERE c.id = ? AND ((u.username = ? AND c" +
                         ".user_id=u.id) OR c.user_id = (SELECT u2.id FROM Users u2 WHERE u2.id =u" +
                         ".partner_id)))",
-                categoryName, username);
+                categoryId, username);
     }
 
-    public int remove(String categoryName, String username) {
-        return jdbcTemplate.update("DELETE FROM Category WHERE name=? AND " +
+    public int remove(Long categoryId, String username) {
+        return jdbcTemplate.update("DELETE FROM Category WHERE id=? AND " +
                 "(user_id = (SELECT u1.id FROM Users " +
                 "u1 where u1.username = ?) OR user_id = (SELECT u2.partner_id FROM Users u2 " +
-                "where u2.username=?));", categoryName, username, username);
+                "where u2.username=?));", categoryId, username, username);
     }
 }
+
+
 

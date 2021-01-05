@@ -6,16 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joaomariajaneiro.datejar.exceptions.AuthenticationException;
 import com.joaomariajaneiro.datejar.model.Category;
 import com.joaomariajaneiro.datejar.model.enums.Type;
-import com.joaomariajaneiro.datejar.repository.CategoryRepository;
-import com.joaomariajaneiro.datejar.repository.UserRepository;
 import com.joaomariajaneiro.datejar.security.JwtUtil;
+import com.joaomariajaneiro.datejar.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,10 +22,7 @@ import java.util.Map;
 public class CategoryController {
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
+    private CategoryService categoryService;
 
     @Autowired
     private JwtUtil jwtTokenUtil;
@@ -43,25 +37,8 @@ public class CategoryController {
         String username =
                 jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-        List<Category> allUserPendingCategories =
-                categoryRepository.getAllUserPendingCategories(username);
+        return categoryService.getAllUserPendingCategories(username);
 
-        Map<String, List<Category>> typesToCategories = new HashMap<>();
-        allUserPendingCategories.forEach(
-                category -> {
-                    if (typesToCategories.containsKey(category.getType().name())) {
-                        List<Category> categories =
-                                typesToCategories.get(category.getType().name());
-                        categories.add(category);
-                        typesToCategories.put(category.getType().name(), categories);
-                    } else {
-                        List<Category> categories = new ArrayList<>();
-                        categories.add(category);
-                        typesToCategories.put(category.getType().name(), categories);
-                    }
-                }
-        );
-        return typesToCategories;
     }
 
     @PostMapping(value = "/add")
@@ -79,7 +56,7 @@ public class CategoryController {
             JsonNode jsonNode = objectMapper.readTree(payload);
             Category category = new Category(jsonNode.get("title").asText(), getType(jsonNode.get
                     ("type").asText()));
-            categoryRepository.save(category, username);
+            categoryService.save(category, username);
         } catch (Exception e) {
             return "There was an error creating the category";
         }
@@ -98,16 +75,16 @@ public class CategoryController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-            categoryRepository.updateName(jsonNode.get("new_category_name").asText(),
-                    jsonNode.get("id").asInt());
+            categoryService.updateName(jsonNode.get("new_category_name").asText(),
+                    jsonNode.get("id").asInt(), username);
             return "Success";
         } catch (Exception e) {
             return "There was an error updating your activity";
         }
     }
 
-    @PostMapping(value = "/remove/{categoryName}")
-    public String removeCategory(@PathVariable String categoryName,
+    @PostMapping(value = "/remove/{categoryId}")
+    public String removeCategory(@PathVariable Long categoryId,
                                  @RequestHeader Map<String, String> headers) {
         if (!headers.containsKey("authorization")) {
             throw new AuthenticationException();
@@ -117,8 +94,7 @@ public class CategoryController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-            categoryRepository.removeActivitiesFromCategory(categoryName, username);
-            categoryRepository.remove(categoryName, username);
+            categoryService.removeCategory(categoryId, username);
             return "Success";
         } catch (Exception e) {
             return "There was an error deleting your category";

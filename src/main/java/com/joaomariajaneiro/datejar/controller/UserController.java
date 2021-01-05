@@ -9,6 +9,7 @@ import com.joaomariajaneiro.datejar.exceptions.AuthenticationException;
 import com.joaomariajaneiro.datejar.model.User;
 import com.joaomariajaneiro.datejar.repository.UserRepository;
 import com.joaomariajaneiro.datejar.security.JwtUtil;
+import com.joaomariajaneiro.datejar.service.UserService;
 import com.joaomariajaneiro.datejar.utils.SendEmail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,7 @@ public class UserController {
     private JwtUtil jwtTokenUtil;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -58,7 +59,7 @@ public class UserController {
 
         User user;
         try {
-            user = userRepository.findByUsername(jsonNode.get("username").asText());
+            user = userService.findByUsername(jsonNode.get("username").asText());
         } catch (Exception e) {
             throw new AuthenticationException();
         }
@@ -83,22 +84,9 @@ public class UserController {
                     passwordEncoder.encode(jsonNode.get("password").asText()),
                     jsonNode.get("picture").asText()
             );
-            userRepository.save(user);
-        } catch (DataAccessException e) {
-            String trim = e.getCause().getLocalizedMessage().split("Detail:")[1].trim();
-            trim = trim.substring(trim.length() - 16);
-            if (trim.contains("already exists.")) {
-                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Username and/or " +
-                        "email" +
-                        " already taken");
-            } else {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error " +
-                        "occurred while creating your account, please try again");
-            }
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error " +
-                    "occurred while creating your account, please try again");
-
+            userService.save(user);
+        } catch (ResponseStatusException e) {
+            throw e;
         }
 
         try {
@@ -127,9 +115,9 @@ public class UserController {
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
 
-            String partnerEmail = userRepository.findByUsername(jsonNode.get(
+            String partnerEmail = userService.findByUsername(jsonNode.get(
                     "partner_username").asText()).getEmail();
-            String email = userRepository.findByUsername(username).getEmail();
+            String email = userService.findByUsername(username).getEmail();
             SendEmail sendEmail = new SendEmail(partnerEmail, "localhost");
 
             sendEmail.sendMail(username + " wants to be your friend on Me2",
@@ -146,14 +134,14 @@ public class UserController {
                                        @PathVariable String partnerEmail) throws JsonProcessingException {
         try {
 
-            userRepository.associateUser(email,
+            userService.associateUser(email,
                     partnerEmail);
-            userRepository.associateUser(partnerEmail,
+            userService.associateUser(partnerEmail,
                     email);
 
             SendEmail sendEmail = new SendEmail(email, "localhost");
 
-            User user = userRepository.findByEmail(partnerEmail);
+            User user = userService.findByEmail(partnerEmail);
 
             sendEmail.sendMail(user.getUsername() + " is now your friend on Me2",
                     "Congratulations getting your friend on Me2!\n Time to start hanging out, add" +
@@ -171,7 +159,7 @@ public class UserController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-            return userRepository.associatedUser(username).getUsername();
+            return userService.associatedUser(username).getUsername();
         } catch (Exception e) {
             return "There was an error retrieving your friend";
         }
@@ -183,11 +171,11 @@ public class UserController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-            User user = userRepository.findByUsername(username);
-            User associatedUser = userRepository.associatedUser(username);
+            User user = userService.findByUsername(username);
+            User associatedUser = userService.associatedUser(username);
 
-            userRepository.removeAssociatedUser(user.getId(), username);
-            userRepository.removeAssociatedUser(associatedUser.getId(),
+            userService.removeAssociatedUser(user.getId(), username);
+            userService.removeAssociatedUser(associatedUser.getId(),
                     associatedUser.getUsername());
         } catch (Exception e) {
             return "The user removal failed";

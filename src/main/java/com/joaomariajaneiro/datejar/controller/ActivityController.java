@@ -8,6 +8,7 @@ import com.joaomariajaneiro.datejar.model.Activity;
 import com.joaomariajaneiro.datejar.model.enums.Type;
 import com.joaomariajaneiro.datejar.repository.ActivityRepository;
 import com.joaomariajaneiro.datejar.security.JwtUtil;
+import com.joaomariajaneiro.datejar.service.ActivityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ActivityController {
 
     @Autowired
-    private ActivityRepository activityRepository;
+    private ActivityService activityService;
 
 
     @Autowired
@@ -44,7 +45,7 @@ public class ActivityController {
 
         try {
             List<Activity> activitiesOfCategory =
-                    activityRepository.getActivitiesOfCategory(Integer.valueOf(categoryId));
+                    activityService.getActivitiesOfCategory(Integer.valueOf(categoryId));
             int rnd = new Random().nextInt(activitiesOfCategory.size());
 
             return activitiesOfCategory.get(rnd);
@@ -63,7 +64,7 @@ public class ActivityController {
         String username =
                 jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-        return activityRepository.getActivitiesOfCategory(categoryId);
+        return activityService.getActivitiesOfCategory(categoryId);
     }
 
     @PostMapping(value = "/update")
@@ -79,15 +80,15 @@ public class ActivityController {
             String username =
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
-            for (Activity activity : activityRepository.getActivitiesOfCategory(jsonNode.get(
+            for (Activity activity : activityService.getActivitiesOfCategory(jsonNode.get(
                     "category_id").asInt())) {
                 if (activity.getName().equals(jsonNode.get("new_activity_name").asText())) {
                     return "The Activity with that name already exists for the chosen category";
                 }
             }
 
-            activityRepository.update(jsonNode.get("new_activity_name").asText(), jsonNode.get(
-                    "old_activity_name").asText(), jsonNode.get("category_id").asInt());
+            activityService.update(jsonNode.get("new_activity_name").asText(), jsonNode.get(
+                    "old_activity_name").asText(), jsonNode.get("category_id").asInt(), username);
             return "Success";
         } catch (Exception e) {
             return "There was an error updating your activity";
@@ -108,12 +109,12 @@ public class ActivityController {
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil
                             .JWT_PREFIX, ""));
 
-            activityRepository.delete(jsonNode.get("activity_name").asText(),
-                    jsonNode.get("category_name").asText(), username, getType(jsonNode.get(
+            activityService.delete(jsonNode.get("activity_id").asLong(),
+                    jsonNode.get("category_id").asLong(), username, getType(jsonNode.get(
                             "category_type").asText()).ordinal());
             return "Activity deleted successfuly";
         } catch (Exception e) {
-            throw new RuntimeException("There was an error creating your activity");
+            throw new RuntimeException("There was an error deleting your activity");
         }
     }
 
@@ -131,14 +132,14 @@ public class ActivityController {
                             .JWT_PREFIX, ""));
 
             for (Activity activity :
-                    activityRepository.getActivitiesOfCategory(jsonNode.get("category_id").asInt())) {
+                    activityService.getActivitiesOfCategory(jsonNode.get("category_id").asInt())) {
                 if (activity.getName().equals(jsonNode.get("activity_name").asText())) {
                     return "The Activity with that name already exists for the chosen category";
                 }
             }
 
             Activity activity = new Activity(jsonNode.get("activity_name").asText());
-            activityRepository.save(activity, jsonNode.get("category_id").asInt());
+            activityService.save(activity, jsonNode.get("category_id").asInt());
             return "Activity created successfuly";
         } catch (Exception e) {
             throw new RuntimeException("There was an error creating your activity");

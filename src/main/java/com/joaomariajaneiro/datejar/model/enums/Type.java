@@ -9,6 +9,6 @@ public enum Type {
     ALTERNATIVE,
     DOUBLE_DATE,
     STAY_AT_HOME,
-    NIGHT_OUT,
-    KINKY
+    PARTY,
+    RANDOM
 }

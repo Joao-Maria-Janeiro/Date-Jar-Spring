@@ -61,7 +61,7 @@ public class UserRepository {
                 username, id);
     }
 
-    public int save(User user) throws DataAccessException  {
+    public int save(User user) throws DataAccessException {
         try {
             return jdbcTemplate.update("INSERT INTO Users (id, username, password, email, " +
                             "picture)" +

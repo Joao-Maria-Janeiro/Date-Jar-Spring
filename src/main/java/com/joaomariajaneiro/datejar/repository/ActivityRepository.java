@@ -31,24 +31,26 @@ public class ActivityRepository {
                 activity.getName(), categoryId);
     }
 
-    public int update(String newActivityName, String oldActivityName, int categoryId) {
-        return jdbcTemplate.update("  UPDATE Activity" +
-                        "    SET name = ? WHERE id = (SELECT a.id FROM Activity a JOIN " +
-                        "Category c ON a.category_id=" +
-                        "        c.id WHERE c.id = ? AND a.name = ?)",
-                newActivityName, categoryId, oldActivityName);
+    public int update(String newActivityName, String oldActivityName, int categoryId,
+                      String username) {
+        return jdbcTemplate.update("UPDATE Activity SET name = ? WHERE id = (SELECT a.id FROM " +
+                        "Activity a JOIN Category c ON a.category_id=c.id WHERE c.id = ? AND a" +
+                        ".name = ?) AND (category_id IN (SELECT id FROM Category WHERE user_id = " +
+                        "(SELECT id FROM Users WHERE username = ?)) OR category_id IN (SELECT " +
+                        "id FROM Category WHERE user_id = (SELECT partner_id FROM Users WHERE " +
+                        "username = ?)))",
+                newActivityName, categoryId, oldActivityName, username, username);
     }
 
-    public int delete(String activityName, String categoryName,
+    public int delete(Long activityId, Long categoryId,
                       String username, int categoryType) {
-        return jdbcTemplate.update("DELETE FROM Activity" +
-                        "    WHERE id = (SELECT a.id FROM Activity a JOIN Category c ON a" +
-                        ".category_id=" +
-                        "        c.id JOIN Users u ON c.user_id=u.id WHERE u.username = ? AND c" +
-                        ".name = ? AND a.name = ? AND c.type = ?)",
-                username, categoryName, activityName, categoryType);
+        return jdbcTemplate.update("DELETE FROM Activity WHERE id = (SELECT a.id FROM Activity a " +
+                        "JOIN Category c ON a.category_id= c.id " +
+                        "WHERE c.id = ? AND a.id = ? AND c.type = ? AND (c" +
+                        ".user_id = (SELECT u1.id FROM Users u1 where u1.username = ?) OR c" +
+                        ".user_id =(SELECT u2.partner_id FROM Users u2 WHERE u2.username=?)))",
+                categoryId, activityId, categoryType, username, username);
     }
 }
-
 
 
