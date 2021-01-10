@@ -34,6 +34,10 @@ public class UserService {
         return userRepository.removeAssociatedUser(id, username);
     }
 
+    public int confirmUser(String username) {
+        return userRepository.confirmUser(username);
+    }
+
     public int save(User user) throws ResponseStatusException {
         try {
             return userRepository.save(user);

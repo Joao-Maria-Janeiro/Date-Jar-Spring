@@ -15,6 +15,8 @@ public class UsersRowMapper implements RowMapper<User> {
                 rs.getString("email"),
                 rs.getString("password"),
                 rs.getString("picture"),
-                rs.getInt("partner_id"));
+                rs.getInt("partner_id"),
+                rs.getBoolean("is_enabled")
+        );
     }
 }

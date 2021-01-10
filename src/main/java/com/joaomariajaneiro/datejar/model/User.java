@@ -19,6 +19,32 @@ public class User {
 
     private List<Category> categories;
 
+    private boolean isEnabled;
+
+
+    public User(long id, String username, String email, String password, String picture,
+                int partner_id, boolean isActive) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.picture = picture;
+        this.partner_id = partner_id;
+        this.isEnabled = isActive;
+    }
+
+    public User(long id, String username, String email, String password, String picture,
+                int partner_id, List<Category> categories, boolean isActive) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.picture = picture;
+        this.partner_id = partner_id;
+        this.categories = categories;
+        this.isEnabled = isActive;
+    }
+
     public User() {
     }
 
@@ -53,6 +79,24 @@ public class User {
         this.email = email;
         this.password = password;
         this.picture = picture;
+    }
+
+    public int getPartner_id() {
+        return partner_id;
+    }
+
+    public User setPartner_id(int partner_id) {
+        this.partner_id = partner_id;
+        return this;
+    }
+
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
+    public User setEnabled(boolean enabled) {
+        isEnabled = enabled;
+        return this;
     }
 
     public String getPicture() {

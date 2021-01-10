@@ -45,6 +45,11 @@ public class UserRepository {
                 partnerUsername, username);
     }
 
+    public int confirmUser(String username) {
+        return jdbcTemplate.update("UPDATE Users SET is_enabled = True WHERE username = ?",
+                username);
+    }
+
     public User associatedUser(String username) {
         User user = jdbcTemplate.queryForObject(
                 "SELECT * FROM Users WHERE id = (SELECT partner_id FROM Users WHERE username = ?)",
