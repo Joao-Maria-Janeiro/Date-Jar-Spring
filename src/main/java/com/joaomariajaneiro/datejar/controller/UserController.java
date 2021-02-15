@@ -14,6 +14,7 @@ import com.joaomariajaneiro.datejar.service.UserService;
 import com.joaomariajaneiro.datejar.utils.SendEmail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,7 +22,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.sql.Date;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -178,6 +178,8 @@ public class UserController {
                     jwtTokenUtil.extractUsername(headers.get("authorization").replace(JwtUtil.JWT_PREFIX, ""));
 
             return userService.associatedUser(username).getUsername();
+        } catch (EmptyResultDataAccessException e) {
+            return "";
         } catch (Exception e) {
             return "There was an error retrieving your friend";
         }
